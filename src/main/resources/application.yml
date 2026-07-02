@@ -1,0 +1,122 @@
+spring:
+  application:
+    name: MikiMock
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/MikiMock
+    username: postgres
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+#
+  jpa:
+    hibernate:
+      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#
+#  logging:
+#    level:
+#      root: INFO
+#      org.hibernate.SQL: WARN
+#      org.hibernate.orm.jdbc.bind: WARN
+
+  spring:
+    jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: false
+      properties:
+        hibernate:
+          show_sql: false
+          format_sql: false
+
+  logging:
+    level:
+      root: INFO
+      org.hibernate.SQL: OFF
+      org.hibernate.orm.jdbc.bind: OFF
+      org.hibernate.type.descriptor.sql.BasicBinder: OFF
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    admin:
+      fail-fast: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: 19bcs2562@gmail.com
+    password: Liv3@l0n3@12
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 3333
+#  address: 0.0.0.0
+  servlet:
+    context-path: /Micki_Mock
+  shutdown: graceful
+
+jwt:
+  secret: mySuperUltraSecureJwtSecretKeyForProduction2026SpringBootApplication
+  access-token-expiration: 9000000
+#  remove one 0 from above to make it 15 min.
+  refresh-token-expiration: 604800000
+
+resilience4j:
+  ratelimiter:
+    instances:
+      authRateLimiter:
+        limitForPeriod: 5
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+
+
+code:
+  runner:
+    url: http://localhost:9090
+    secret: super-secret-runner-key
+    timeout-ms: 10000
+
+
+razorpay:
+  key-id: rzp_test_SqtjmPLpeWoWY8
+  key-secret: wvDnw3JVx2pDsddD9gmLukfJ
+
+
+agora:
+  app-id: 7c12e80aed7c45e290044d42446bef82
+  app-certificate: 6fc1142a8438461bbd0431d0bcc1e52b
+  token-expiry: 3600
+
+#  monitor the interview details
+#  add share IDE
+#  monitor shared IDE
+#  Notification system
+#  refine All logics
+#  check security
+#  check production level code , memory leak etc
+#  secure env variables
+#  during hosting add prod env. variable
+#  deloye project
