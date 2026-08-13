@@ -69,8 +69,7 @@ public class RoomService implements RoomServiceInt{
 
         Integer uid =Math.abs(user.getId().hashCode());
 
-        String token = agoraTokenService.generateToken(roomCode, uid
-        );
+        String token = agoraTokenService.generateToken(roomCode, uid);
 
         return RoomJoinResponse.builder()
                 .appId(appId)
@@ -221,11 +220,9 @@ public class RoomService implements RoomServiceInt{
             roomRepository.save(room);
         }
 
-        List<RoomParticipants> participants =
-                roomParticipantRepository.findByRoom(room);
+        List<RoomParticipants> participants = roomParticipantRepository.findByRoom(room);
 
-        RoomParticipants partner =
-                participants.stream()
+        RoomParticipants partner = participants.stream()
                         .filter(p ->
                                 !p.getUser().getId()
                                         .equals(user.getId())

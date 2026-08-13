@@ -1,6 +1,9 @@
 package MikiMock.com.MikiMock.Security.Configuration;
 
 import MikiMock.com.MikiMock.Security.Filter.JwtAuthenticationFilter;
+import MikiMock.com.MikiMock.Security.OAuth.CustomOAuth2UserService;
+import MikiMock.com.MikiMock.Security.OAuth.OAuthFailureHandler;
+import MikiMock.com.MikiMock.Security.OAuth.OAuthSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.*;
@@ -21,6 +24,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+    private final OAuthSuccessHandler oAuth2SuccessHandler;
+
+    private final OAuthFailureHandler oAuth2FailureHandler;
 
 
 
@@ -58,6 +67,18 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
                         .anyRequest()
                         .authenticated()
+                )
+
+
+                .oauth2Login(oauth -> oauth
+
+                        .userInfoEndpoint(user ->
+                                user.userService(customOAuth2UserService)
+                        )
+
+                        .successHandler(oAuth2SuccessHandler)
+
+                        .failureHandler(oAuth2FailureHandler)
                 )
 
                 .addFilterBefore(

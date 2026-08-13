@@ -1,9 +1,6 @@
 package MikiMock.com.MikiMock.Auth.controller;
 
-import MikiMock.com.MikiMock.Auth.dto.AuthResponse;
-import MikiMock.com.MikiMock.Auth.dto.LoginRequest;
-import MikiMock.com.MikiMock.Auth.dto.RefreshTokenResponse;
-import MikiMock.com.MikiMock.Auth.dto.RegisterRequest;
+import MikiMock.com.MikiMock.Auth.dto.*;
 import MikiMock.com.MikiMock.Auth.service.AuthService;
 import MikiMock.com.MikiMock.Common.Exception.BusinessException;
 import MikiMock.com.MikiMock.Common.Response.ApiResponse;
@@ -33,19 +30,13 @@ public class AuthController {
 
     @PostMapping("/register")
     @RateLimiter(name = "authRateLimiter")
-    public ResponseEntity<ApiResponse<AuthResponse>>
-    register(
-            @Valid
-            @RequestBody
-            RegisterRequest registerRequest
-    ) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
         String correlationId = MDC.get("X-Correlation-Id");
 
         log.info("Registration request received | correlationId={} | email={}", correlationId, registerRequest.getEmail());
 
-        AuthResponse response =
-                authService.register(registerRequest);
+        AuthResponse response = authService.register(registerRequest);
 
         log.info(
                 "Registration successful | correlationId={} | email={}",
@@ -115,10 +106,34 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+
+        String correlationId = MDC.get("X-Correlation-Id");
+
+        log.info("Logout request received | correlationId={}", correlationId);
         String reponse = authService.logout(request, response);
         return ResponseUtil.success("Logout successful",reponse);
     }
 
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+
+        authService.forgotPassword(request.getEmail());
+
+        return ResponseUtil.success(
+                "If account exists, a password has been sent."
+        ,"If account exists, a password has been sent.");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        log.info("Change Password Request");
+
+        authService.changePassword(request);
+
+        return ResponseUtil.success(
+                "Password Changes."
+                ,"Password Changes.");
+    }
 
 }

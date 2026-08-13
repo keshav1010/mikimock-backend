@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
                 ),
                 @Index(
                         name = "idx_refresh_token_token",
-                        columnList = "token"
+                        columnList = "token_hash"
                 )
         }
 )
@@ -34,9 +34,9 @@ public class RefreshToken {
     @Column(
             nullable = false,
             unique = true,
-            length = 500
+            length = 64
     )
-    private String token;
+    private String tokenHash;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(

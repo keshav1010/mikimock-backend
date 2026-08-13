@@ -1,75 +1,113 @@
 package MikiMock.com.MikiMock.Auth.service;
 
 
+import MikiMock.com.MikiMock.Auth.dto.GeneratedRefreshToken;
 import MikiMock.com.MikiMock.Common.Exception.BusinessException;
 import MikiMock.com.MikiMock.Auth.entity.RefreshToken;
 import MikiMock.com.MikiMock.Auth.repository.RefreshTokenRepository;
 import MikiMock.com.MikiMock.User.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
+import static java.util.Objects.hash;
+
 @Slf4j
+@Transactional
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository repository;
 
     @Transactional
-    public RefreshToken createRefreshToken(
+    public GeneratedRefreshToken createRefreshToken(
             User user
     ) {
 
-        RefreshToken refreshToken = refreshTokenRepository
-                        .findByUser(user)
-                        .orElse(null);
+        RefreshToken refreshToken =
+                repository.findByUser(user)
+                        .orElse(new RefreshToken());
 
-        if(refreshToken == null){
-            refreshToken = new RefreshToken();
-            refreshToken.setUser(user);
-        }
+        refreshToken.setUser(user);
 
-        log.info("creating new RefreshToken");
-        refreshToken.setToken(UUID.randomUUID().toString());
+        String rawToken =
+                generateRefreshToken();
+
+        refreshToken.setTokenHash(
+                hash(rawToken)
+        );
+
         refreshToken.setRevoked(false);
-        refreshToken.setCreatedAt(LocalDateTime.now());
-        refreshToken.setExpiryAt(LocalDateTime.now().plusDays(7));
 
-        return refreshTokenRepository.save(refreshToken);
+        refreshToken.setExpiryAt(
+                LocalDateTime.now().plusDays(7)
+        );
+
+        repository.save(refreshToken);
+
+        return new GeneratedRefreshToken(
+                refreshToken,
+                rawToken
+        );
     }
 
-    public RefreshToken validateRefreshToken(String token) {
+    public RefreshToken validateRefreshToken(
+            String rawToken
+    ) {
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token).orElseThrow(() -> new BusinessException(
-                                        "Invalid refresh token"
-                                ));
+        String hashed =
+                hash(rawToken);
 
-        if (refreshToken.getRevoked()) {throw new BusinessException(
-                    "Refresh token revoked");
+        RefreshToken refreshToken =
+                repository.findByTokenHash(hashed)
+                        .orElseThrow(() ->
+                                new BusinessException("Invalid refresh token")
+                        );
+
+        if (refreshToken.getRevoked()) {
+            throw new BusinessException("Refresh token revoked");
         }
 
-        if (refreshToken.getExpiryAt().isBefore(LocalDateTime.now())) {throw new BusinessException(
-                    "Refresh token expired"
-            );}
+        if (refreshToken.getExpiryAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Refresh token expired");
+        }
 
         return refreshToken;
     }
 
     public void revokeToken(User user) {
 
-        refreshTokenRepository.findByUser(user)
-
+        repository.findByUser(user)
                 .ifPresent(token -> {
 
                     token.setRevoked(true);
 
-                    refreshTokenRepository.save(token);
+                    repository.save(token);
                 });
+    }
+
+    private String hash(String token) {
+
+        return DigestUtils.sha256Hex(token);
+    }
+
+    private String generateRefreshToken() {
+
+        byte[] bytes =
+                new byte[32];
+
+        new SecureRandom().nextBytes(bytes);
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
     }
 }

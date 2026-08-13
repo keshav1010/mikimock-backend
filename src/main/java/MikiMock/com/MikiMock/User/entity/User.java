@@ -47,7 +47,7 @@ public class User implements UserDetails {
     )
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(name = "full_name")
@@ -77,6 +77,16 @@ public class User implements UserDetails {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+
+    private AuthProvider provider;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "profile_image")
+    private String profileImage;
 
     @PrePersist
     public void prePersist() {

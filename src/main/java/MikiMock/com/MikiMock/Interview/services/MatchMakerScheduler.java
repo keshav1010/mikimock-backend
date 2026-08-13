@@ -1,6 +1,7 @@
 package MikiMock.com.MikiMock.Interview.services;
 
 import MikiMock.com.MikiMock.Common.Exception.BusinessException;
+import MikiMock.com.MikiMock.Interview.AgoraSessionTracking.service.AgoraSessionServiceInt;
 import MikiMock.com.MikiMock.Interview.Z_ProblemAssigner.ProblemAssignmentService;
 import MikiMock.com.MikiMock.Interview.entity.*;
 import MikiMock.com.MikiMock.Room.repository.RoomParticipantRepository;
@@ -31,6 +32,7 @@ public class MatchMakerScheduler {
     private final RoomRepository roomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
     private final ProblemAssignmentService problemAssignmentService;
+    private final AgoraSessionServiceInt agoraSessionService;
 
     @Scheduled(fixedRate = 6000)
     public void matchUser() {
@@ -198,13 +200,13 @@ public class MatchMakerScheduler {
             String level
     ) {
 
-        String channelName = "room_" + UUID.randomUUID();
+        String roomCode = "room_" + UUID.randomUUID();
 
         RoomMode roomMode = resolveRoomMode(topic);
 
         Room room =
                 Room.builder()
-                        .roomCode(channelName)
+                        .roomCode(roomCode)
                         .topic(topic)
                         .level(level)
                         .startAt(LocalDateTime.now())
@@ -216,6 +218,7 @@ public class MatchMakerScheduler {
                         .build();
 
         Room savedRoom = roomRepository.save(room);
+        agoraSessionService.startSession(room);
 
         RoomParticipants participant1 =
                 roomParticipantRepository.save(

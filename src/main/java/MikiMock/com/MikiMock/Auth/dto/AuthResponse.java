@@ -26,5 +26,4 @@ public class AuthResponse {
 
     private Integer freeInterviewUsed;
 
-//    private Boolean isEmailVerified;
 }

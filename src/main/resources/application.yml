@@ -7,56 +7,95 @@ spring:
     username: postgres
     password: admin123
     driver-class-name: org.postgresql.Driver
-#
+
+  #  jpa:
+  #    hibernate:
+  #      ddl-auto: update
+  #    show-sql: true
+  #    properties:
+  #      hibernate:
+  #        format_sql: true
+  #
+  #  logging:
+  #    level:
+  #      root: INFO
+  #      org.hibernate.SQL: WARN
+  #      org.hibernate.orm.jdbc.bind: WARN
+
   jpa:
     hibernate:
       ddl-auto: update
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#
-#  logging:
-#    level:
-#      root: INFO
-#      org.hibernate.SQL: WARN
-#      org.hibernate.orm.jdbc.bind: WARN
-
-  spring:
-    jpa:
+    show-sql: false
+    properties:
       hibernate:
-        ddl-auto: update
-      show-sql: false
-      properties:
-        hibernate:
-          show_sql: false
-          format_sql: false
+        show_sql: false
+        format_sql: false
 
-  logging:
-    level:
-      root: INFO
-      org.hibernate.SQL: OFF
-      org.hibernate.orm.jdbc.bind: OFF
-      org.hibernate.type.descriptor.sql.BasicBinder: OFF
+  aws:
+    region: ap-south-1
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+
+
+  ses:
+    from-email: 19bcs2562@gmail.com
+    to-support-email: keshav.for.official@gmail.com
+
 
   kafka:
+
     bootstrap-servers: localhost:9092
-    consumer:
-      group-id: notification-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
     producer:
+
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    admin:
-      fail-fast: false
+
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+
+      group-id: notification-group
+
+      auto-offset-reset: earliest
+
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+
+        spring.json.value.default.type: MikiMock.com.MikiMock.Notification.dto.NotificationEvent
+
+        spring.json.trusted.packages: MikiMock.com.MikiMock.Notification.dto
+
+    listener:
+
+      ack-mode: record
+
+      missing-topics-fatal: false
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#
+#    consumer:
+#      group-id: notification-group
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#
+#      properties:
+#        spring.json.value.default.type: MikiMock.com.MikiMock.Notification.dto.NotificationEvent
+#        spring.json.trusted.packages: MikiMock.com.MikiMock.Notification.dto
 
   mail:
     host: smtp.gmail.com
     port: 587
     username: 19bcs2562@gmail.com
-    password: Liv3@l0n3@12
+    password: ${MAIL_PASSWORD}
+
     properties:
       mail:
         smtp:
@@ -64,17 +103,63 @@ spring:
           starttls:
             enable: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+notification:
+  topic: notification-topic
+
 server:
   port: 3333
-#  address: 0.0.0.0
+  #  address: 0.0.0.0
   servlet:
     context-path: /Micki_Mock
   shutdown: graceful
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  endpoint:
+    health:
+      show-details: always
+
+  health:
+    redis:
+      enabled: true
+
+    db:
+      enabled: true
+
+    diskspace:
+      enabled: true
+
+    mail:
+      enabled: true
+
+    ping:
+      enabled: true
+
 jwt:
   secret: mySuperUltraSecureJwtSecretKeyForProduction2026SpringBootApplication
-  access-token-expiration: 9000000
-#  remove one 0 from above to make it 15 min.
+  access-token-expiration: 900000
   refresh-token-expiration: 604800000
 
 resilience4j:
@@ -85,13 +170,13 @@ resilience4j:
         limitRefreshPeriod: 1m
         timeoutDuration: 0
 
-
 logging:
   level:
     root: INFO
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
-
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
 
 code:
   runner:
@@ -99,11 +184,9 @@ code:
     secret: super-secret-runner-key
     timeout-ms: 10000
 
-
 razorpay:
   key-id: rzp_test_SqtjmPLpeWoWY8
   key-secret: wvDnw3JVx2pDsddD9gmLukfJ
-
 
 agora:
   app-id: 7c12e80aed7c45e290044d42446bef82

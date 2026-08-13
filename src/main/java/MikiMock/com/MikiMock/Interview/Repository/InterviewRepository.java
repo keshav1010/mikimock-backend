@@ -94,4 +94,33 @@ public interface InterviewRepository extends JpaRepository<InterviewSchedule,Lon
 
 
     boolean existsByUserAndScheduledTimeAndStatusNot(User user, @NotNull(message = "Time is required") @Future(message = "Time must be in the future") LocalDateTime time, ScheduleStatus scheduleStatus);
+
+    List<InterviewSchedule> findByscheduledTimeBetweenAndStatus(
+                LocalDateTime start,
+                LocalDateTime end,
+                ScheduleStatus status
+    );
+
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM interview_schedule
+        WHERE status='COMPLETED'
+        AND DATE(end_time)=CURRENT_DATE
+        """, nativeQuery = true)
+    Long getCompletedInterviewToday();
+
+    @Query("""
+            select count(i) from InterviewSchedule i
+            where i.endTime < CURRENT_TIMESTAMP
+            And i.status = 'SCHEDULED'
+            AND FUNCTION('DATE', i.endTime) = CURRENT_DATE
+            """)
+    Long noShowToday();
+
+
+    @Query("""
+            select count(i) from InterviewSchedule i
+            where i.status = 'SCHEDULED'
+            """)
+    Long countRunning();
 }

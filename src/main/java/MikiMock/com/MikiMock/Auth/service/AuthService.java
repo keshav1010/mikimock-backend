@@ -1,9 +1,6 @@
 package MikiMock.com.MikiMock.Auth.service;
 
-import MikiMock.com.MikiMock.Auth.dto.AuthResponse;
-import MikiMock.com.MikiMock.Auth.dto.LoginRequest;
-import MikiMock.com.MikiMock.Auth.dto.RefreshTokenResponse;
-import MikiMock.com.MikiMock.Auth.dto.RegisterRequest;
+import MikiMock.com.MikiMock.Auth.dto.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -19,4 +16,8 @@ public interface AuthService {
     RefreshTokenResponse refreshToken(String refreshToken);
 
     String logout(HttpServletRequest request, HttpServletResponse response);
+
+    void forgotPassword(String email);
+
+    void changePassword(@Valid ChangePasswordRequest request);
 }

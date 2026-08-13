@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -25,6 +26,19 @@ public interface RoomRepository extends JpaRepository<Room,Long> {
     AND r.expiresAt <= :now
     """)
     void updateExpiredRooms(@Param("now") LocalDateTime now);
+
+    @Query("""
+        SELECT r
+        FROM Room r
+        WHERE
+            r.status='IN_PROGRESS'
+        AND
+            r.startAt BETWEEN :fromTime AND :toTime
+        """)
+    List<Room> findExpiredRooms(
+            LocalDateTime fromTime,
+            LocalDateTime toTime
+    );
 
 
 
@@ -53,5 +67,18 @@ public interface RoomRepository extends JpaRepository<Room,Long> {
     Optional<Room> findActiveRoomByUserId(
             @Param("userId") Long userId
     );
+
+
+    @Query("""
+        SELECT COUNT(r)
+        FROM Room r
+        WHERE r.createdAt >= :start
+        AND r.createdAt < :end
+        """)
+    Long roomsCreatedToday(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
 
 }

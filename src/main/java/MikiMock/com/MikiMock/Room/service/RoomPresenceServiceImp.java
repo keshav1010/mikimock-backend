@@ -54,6 +54,7 @@ public class RoomPresenceServiceImp implements RoomPresenceService {
 
 
         participant.setJoinedAt(LocalDateTime.now());
+        if(room.getStartAt() == null) room.setStartAt(LocalDateTime.now());
 
 
         log.info(

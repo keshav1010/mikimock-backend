@@ -132,8 +132,7 @@ public class InterviewController {
             @RequestParam(defaultValue = "java") String language
     ) {
 
-        JoinRoomResponse response =
-                roomServiceInt.joinExistingRoom(
+        JoinRoomResponse response = roomServiceInt.joinExistingRoom(
                         roomCode,
                         language
                 );
