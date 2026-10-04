@@ -187,6 +187,10 @@ code:
 razorpay:
   key-id: rzp_test_SqtjmPLpeWoWY8
   key-secret: wvDnw3JVx2pDsddD9gmLukfJ
+  webhook-secret: 34534634123434
+
+#  ${RAZORPAY_WEBHOOK_SECRET}
+
 
 agora:
   app-id: 7c12e80aed7c45e290044d42446bef82

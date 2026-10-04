@@ -63,6 +63,8 @@ public class ChangeProblemServiceImp implements ChangeProblemService{
         assignment.setQuestion(newProblem);
         assignmentRepository.save(assignment);
 
+        log.info("New problem {}",newProblem.getTitle());
+
         AssignedProblemResponse response = toResponse(newProblem, language);
 
         messagingTemplate.convertAndSend(

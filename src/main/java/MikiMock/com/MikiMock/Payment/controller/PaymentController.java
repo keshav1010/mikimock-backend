@@ -3,10 +3,9 @@ package MikiMock.com.MikiMock.Payment.controller;
 
 import MikiMock.com.MikiMock.Common.Response.ApiResponse;
 import MikiMock.com.MikiMock.Common.Response.ResponseUtil;
-import MikiMock.com.MikiMock.Payment.dto.CreateOrderRequest;
-import MikiMock.com.MikiMock.Payment.dto.CreateOrderResponse;
-import MikiMock.com.MikiMock.Payment.dto.VerifyPaymentRequest;
+import MikiMock.com.MikiMock.Payment.dto.*;
 import MikiMock.com.MikiMock.Payment.service.OrderService;
+import MikiMock.com.MikiMock.Payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,39 +21,53 @@ public class PaymentController {
     private final OrderService orderService;
 
 
+//    @PostMapping("/order-create")
+//    public ResponseEntity<ApiResponse<CreateOrderResponse>> createOrder(@Valid @RequestBody CreateOrderRequest request){
+//        String correlationId = MDC.get("X-Correlation-Id");
+//        log.info("Order creation request | correlation={}",correlationId);
+//
+//        CreateOrderResponse response = orderService.createOrder(request);
+//
+//        return ResponseUtil.created("Order creation successful",response);
+//
+//    }
+
+    private final PaymentService paymentService;
+
+
     @PostMapping("/order-create")
-    public ResponseEntity<ApiResponse<CreateOrderResponse>> createOrder(@Valid @RequestBody CreateOrderRequest request){
+    public ResponseEntity<ApiResponse<CreatePaymentResponse>> createOrder(@Valid @RequestBody CreatePaymentRequest request){
         String correlationId = MDC.get("X-Correlation-Id");
         log.info("Order creation request | correlation={}",correlationId);
 
-        CreateOrderResponse response = orderService.createOrder(request);
+        CreatePaymentResponse response = paymentService.createPayment(request);
 
         return ResponseUtil.created("Order creation successful",response);
 
     }
+//    @PostMapping("/verify")
+//    public ResponseEntity<ApiResponse<String>> verifyPayment(@Valid @RequestBody VerifyPaymentRequest request) {
+//
+//        String correlationId = MDC.get("X-Correlation-Id");
+//        log.info("Payment verification request | correlation={}",correlationId);
+//        orderService.verifyPayment(request);
+//        log.info("Payment verification successful | correlation={}",correlationId);
+//
+//        return ResponseUtil.success("Payment verified successfully", "PREMIUM ACTIVATED");
+//
+//    }
     @PostMapping("/verify")
-    public ResponseEntity<
-            ApiResponse<String>
-            > verifyPayment(
-
-            @Valid
-            @RequestBody
-            VerifyPaymentRequest request
-    ) {
+    public ResponseEntity<ApiResponse<String>> verifyPayment(@Valid @RequestBody VerifyPaymentRequest request) {
 
         String correlationId = MDC.get("X-Correlation-Id");
-        log.info("Payment verification request | correlation={}",correlationId);
 
-        orderService.verifyPayment(request);
+        log.info("Payment verification request received | correlationId={} | paymentId={}", correlationId, request.getPaymentId());
 
-        log.info("Payment verification successful | correlation={}",correlationId);
+        paymentService.verifyPayment(request);
 
-        return ResponseUtil.success(
-                "Payment verified successfully",
-                "PREMIUM ACTIVATED"
-        );
+        log.info("Payment verification completed | correlationId={} | paymentId={}", correlationId, request.getPaymentId());
 
-
+        return ResponseUtil.success("Payment verified successfully", "PREMIUM ACTIVATED");
     }
 
 }

@@ -48,6 +48,10 @@ public class InterviewQuestion {
 
     private Long score;
 
+    private String company;
+
+    private String solve;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

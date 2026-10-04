@@ -20,4 +20,8 @@ public interface InterviewService {
     List<FutureScheduledInterviews> getFutureScheduledInterviews();
 
     CancelScheduledInterview cancelScheduledInterview(UUID scheduledInterviewId);
+
+    void cancelInterviewForMatchmakingTimeout(Long userId);
+
+    boolean hasJoinedInterview(Long userId);
 }

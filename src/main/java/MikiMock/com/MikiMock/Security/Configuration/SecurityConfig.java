@@ -57,9 +57,12 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/contact/**",
+                                "/api/v1/questions/**",
                                 "/ws/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/v1/payments/webhook/**"
                         ).permitAll()
                         .requestMatchers("/notification/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

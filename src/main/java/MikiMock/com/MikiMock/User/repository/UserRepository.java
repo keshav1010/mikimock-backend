@@ -2,7 +2,9 @@ package MikiMock.com.MikiMock.User.repository;
 
 import MikiMock.com.MikiMock.User.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
@@ -48,6 +50,18 @@ public interface UserRepository
         where u.subscriptionType = 'FREE'
     """)
     Long countFreeUsers();
+
+
+    //Used in subscription Lifecycle
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT u
+    FROM User u
+    WHERE u.id = :userId
+    """)
+    Optional<User> findByIdForUpdate(
+            @Param("userId") Long userId
+    );
 
 
 }

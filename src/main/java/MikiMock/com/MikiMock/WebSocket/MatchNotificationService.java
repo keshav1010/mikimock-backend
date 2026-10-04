@@ -26,4 +26,17 @@ public class MatchNotificationService {
                         .build()
         );
     }
+
+    public void notifyMatchmakingCancelled(Long userId, String message) {
+        messagingTemplate.convertAndSend(
+
+                "/topic/match/" + userId,
+
+                MatchNotificationPayload.builder()
+                        .event("MATCHMAKING_CANCELLED")
+                        .roomCode(null)
+                        .message(message)
+                        .build()
+        );
+    }
 }

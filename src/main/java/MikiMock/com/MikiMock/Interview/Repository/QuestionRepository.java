@@ -1,6 +1,7 @@
 package MikiMock.com.MikiMock.Interview.Repository;
 
 import MikiMock.com.MikiMock.Interview.entity.InterviewQuestion;
+import io.lettuce.core.ScanIterator;
 import io.lettuce.core.dynamic.annotation.Param;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -34,4 +35,6 @@ public interface QuestionRepository extends JpaRepository<InterviewQuestion , Lo
             @Param("level") String level,
             @Param("category") String category
     );
+
+    List<InterviewQuestion> findByTopicIgnoreCase(String topic);
 }

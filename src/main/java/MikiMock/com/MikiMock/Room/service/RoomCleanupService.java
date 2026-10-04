@@ -7,6 +7,7 @@ import MikiMock.com.MikiMock.Room.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +20,6 @@ import java.util.List;
 public class RoomCleanupService {
 
     private final RoomRepository roomRepository;
-
     private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
@@ -93,11 +93,17 @@ public class RoomCleanupService {
             }
         }
     }
+
+    @Scheduled(fixedRate = 60000)
+    public void cleanupExpiredRooms() {
+
+        forceLeaveExpiredRooms(true);
+    }
 }
 
 
 
-//
+
 //import MikiMock.com.MikiMock.Interview.AgoraSessionTracking.entity.AgoraSessionClosedBy;
 //import MikiMock.com.MikiMock.Interview.AgoraSessionTracking.service.AgoraSessionServiceInt;
 //import MikiMock.com.MikiMock.Room.repository.RoomRepository;
@@ -109,7 +115,7 @@ public class RoomCleanupService {
 //import org.springframework.transaction.annotation.Transactional;
 //
 //import java.time.LocalDateTime;
-//
+
 //@Component
 //@RequiredArgsConstructor
 //@Slf4j
@@ -118,17 +124,17 @@ public class RoomCleanupService {
 //    private final AgoraSessionServiceInt agoraSessionService;
 //
 //
-////    @Scheduled(fixedRate = 60000)
-////    @Transactional
-////    public void completeExpiredRooms(){
-////        LocalDateTime now = LocalDateTime.now();
-////        roomRepository.updateExpiredRooms(now);
-////
-////        log.info("Expired rooms updated");
+//    @Scheduled(fixedRate = 60000)
+//    @Transactional
+//    public void completeExpiredRooms(){
+//        LocalDateTime now = LocalDateTime.now();
+//        roomRepository.updateExpiredRooms(now);
 //
-////        agoraSessionService.endSession(
-////                room,
-////                AgoraSessionClosedBy.NORMAL
-////        );
-////    }
+//        log.info("Expired rooms updated");
+//
+//        agoraSessionService.endSession(
+//                room,
+//                AgoraSessionClosedBy.NORMAL
+//        );
+//    }
 //}

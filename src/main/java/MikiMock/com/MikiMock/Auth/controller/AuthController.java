@@ -30,13 +30,14 @@ public class AuthController {
 
     @PostMapping("/register")
     @RateLimiter(name = "authRateLimiter")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
         String correlationId = MDC.get("X-Correlation-Id");
 
         log.info("Registration request received | correlationId={} | email={}", correlationId, registerRequest.getEmail());
 
-        AuthResponse response = authService.register(registerRequest);
+//        AuthResponse response = authService.register(registerRequest);
+        authService.register(registerRequest);
 
         log.info(
                 "Registration successful | correlationId={} | email={}",
@@ -46,7 +47,7 @@ public class AuthController {
 
         return ResponseUtil.created(
                 "User registered successfully",
-                response
+                "Success"
         );
     }
 

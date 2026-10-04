@@ -28,7 +28,7 @@ public interface InterviewRepository extends JpaRepository<InterviewSchedule,Lon
         SELECT i
         FROM InterviewSchedule i
         WHERE i.user.id = :userId
-        AND i.status = 'SCHEDULED'
+        AND i.status in ('SCHEDULED','JOINED','EXPIRED') 
         AND i.scheduledTime <= CURRENT_TIMESTAMP
         AND i.endTime > CURRENT_TIMESTAMP
 
@@ -41,7 +41,7 @@ public interface InterviewRepository extends JpaRepository<InterviewSchedule,Lon
         SELECT i
         FROM InterviewSchedule i
         WHERE i.user.id = :userId
-        AND i.status = 'SCHEDULED'
+        AND i.status in ('SCHEDULED','JOINED','EXPIRED') 
         AND i.endTime >= CURRENT_TIMESTAMP
     """)
     List<InterviewSchedule> findFutureSchedule(@Param("userId") Long userId);
@@ -112,7 +112,7 @@ public interface InterviewRepository extends JpaRepository<InterviewSchedule,Lon
     @Query("""
             select count(i) from InterviewSchedule i
             where i.endTime < CURRENT_TIMESTAMP
-            And i.status = 'SCHEDULED'
+            And i.status = 'NO_SHOW'
             AND FUNCTION('DATE', i.endTime) = CURRENT_DATE
             """)
     Long noShowToday();
@@ -123,4 +123,48 @@ public interface InterviewRepository extends JpaRepository<InterviewSchedule,Lon
             where i.status = 'SCHEDULED'
             """)
     Long countRunning();
+
+
+    long countByTopicAndScheduledTimeAndStatusNot(
+            String topic,
+            LocalDateTime scheduledTime,
+            ScheduleStatus status
+    );
+
+    long countByUserAndScheduledTimeBetweenAndStatus(
+            User user,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            ScheduleStatus status
+    );
+
+    @Query("""
+        SELECT s
+        FROM InterviewSchedule s
+        WHERE s.scheduledTime < :deadline
+          AND s.status = :status
+        """)
+    List<InterviewSchedule> findScheduledInterviewsBefore(
+            @Param("deadline") LocalDateTime deadline,
+            @Param("status") ScheduleStatus status
+    );
+
+    @Query("""
+        SELECT i
+        FROM InterviewSchedule i
+        WHERE i.user.id = :userId
+          AND i.status = :status
+        ORDER BY i.scheduledTime DESC
+        """)
+    Optional<InterviewSchedule> findActiveJoinedInterviewForUser(
+            @Param("userId") Long userId,
+            @Param("status") ScheduleStatus status
+    );
+
+    boolean existsByUserIdAndStatus(
+            Long userId,
+            ScheduleStatus status
+    );
+
+    long countByUserAndStatusNot(User user, ScheduleStatus scheduleStatus);
 }

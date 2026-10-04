@@ -51,14 +51,19 @@ public class AuthServiceImp implements AuthService{
 
     @Override
     @Transactional
-    public AuthResponse register(RegisterRequest registerRequest) {
+    public void register(RegisterRequest registerRequest) {
+        log.info("User registeration start");
         if(userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new BusinessException("Email already exists");
         }
 
+        String temporaryPassword = generateTemporaryPassword();
+
         User user = User.builder()
                 .email(registerRequest.getEmail())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .fullName(registerRequest.getName())
+                .password(passwordEncoder.encode(temporaryPassword))
+//                .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .build();
 
         userRepository.save(user);
@@ -72,23 +77,51 @@ public class AuthServiceImp implements AuthService{
 
         userCredentialsRepository.save(userCredentials);
 
-        String accessToken = jwtService.generateToken(user);
+//        String accessToken = jwtService.generateToken(user);
+//
+//        String refreshToken = refreshTokenService.createRefreshToken(user).getRawToken();
 
-        String refreshToken = refreshTokenService.createRefreshToken(user).getRawToken();
+        NotificationEvent event =
+                NotificationEvent.builder()
 
-        return AuthResponse.builder()
+                        .toEmail(registerRequest.getEmail())
 
-                .accessToken(accessToken)
+                        .subject("Login credentials")
 
-                .refreshToken(refreshToken)
+                        .body(
+                                """
+                                Your account has been successfully created.
+                        
+                                Please find your login credentials below:
+                        
+                                Username: %s
+                                Password: %s
+                        
+                                Please use these credentials to log in to your account.
+                        
+                                For security purposes, please change your password immediately after your first login.
+                        
+                                If you did not request this account, please contact our support team.
+                                """.formatted(registerRequest.getEmail() , temporaryPassword)
+                        )
 
-                .tokenType("Bearer")
+                        .build();
 
-                .email(user.getEmail())
+        notificationProducer.publish(event);
 
-                .role(user.getRole().name())
-
-                .build();
+//        return AuthResponse.builder()
+//
+//                .accessToken(accessToken)
+//
+//                .refreshToken(refreshToken)
+//
+//                .tokenType("Bearer")
+//
+//                .email(user.getEmail())
+//
+//                .role(user.getRole().name())
+//
+//                .build();
 
     }
 
@@ -185,7 +218,7 @@ public class AuthServiceImp implements AuthService{
         Optional<User> optionalUser = userRepository.findByEmail(email);
 
         if (optionalUser.isEmpty()) {
-            return;
+            throw new BusinessException("User not found");
         }
 
         User user = optionalUser.get();

@@ -134,8 +134,25 @@ public class ProblemAssignmentServiceImp implements ProblemAssignmentService {
 
 
     public InterviewQuestion getNewProblem(String topic, String level) {
-        List<InterviewQuestion> questions = questionRepository.findByTopicIgnoreCaseAndLevelIgnoreCaseAndActiveTrue(topic , level);
-//        log.info("List of Problems:{}",questions.toString());
+        log.info(
+                "Getting new problem - topic='{}', level='{}'",
+                topic,
+                level
+        );
+
+        List<InterviewQuestion> questions ;
+        if(!level.equals("MIXED")) questions  = questionRepository.findByTopicIgnoreCaseAndLevelIgnoreCaseAndActiveTrue(topic , level);
+        else questions  = questionRepository.findByTopicIgnoreCaseAndLevelIgnoreCaseAndActiveTrue(topic , "MEDIUM");
+
+        if (questions.isEmpty()) {
+            throw new BusinessException(
+                    "No active problems available for topic '"
+                            + topic
+                            + "' and level '"
+                            + level
+                            + "'."
+            );
+        }
 
         InterviewQuestion interviewQuestion = questions.get(ThreadLocalRandom.current().nextInt(questions.size()));
 

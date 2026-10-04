@@ -1,3 +1,164 @@
+spring:
+  application:
+    name: MikiMock
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: MikiMock.com.MikiMock.Notification.dto.NotificationEvent
+        spring.json.trusted.packages: MikiMock.com.MikiMock.Notification.dto
+
+    listener:
+      ack-mode: record
+      missing-topics-fatal: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+
+notification:
+  topic: notification-topic
+
+
+server:
+  port: 3333
+  servlet:
+    context-path: /Micki_Mock
+  shutdown: graceful
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  endpoint:
+    health:
+      show-details: never
+
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+    mail:
+      enabled: true
+    ping:
+      enabled: true
+
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+
+resilience4j:
+  ratelimiter:
+    instances:
+      authRateLimiter:
+        limitForPeriod: 5
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+
+
+code:
+  runner:
+    url: ${CODE_RUNNER_URL}
+    secret: ${CODE_RUNNER_SECRET}
+    timeout-ms: 10000
+
+
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+
+
+agora:
+  app-id: ${AGORA_APP_ID}
+  app-certificate: ${AGORA_APP_CERTIFICATE}
+  token-expiry: 3600
+
+
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+
+
+ses:
+  from-email: ${SES_FROM_EMAIL}
+  to-support-email: ${SES_SUPPORT_EMAIL}
 
 
 
@@ -5,8 +166,7 @@
 
 
 
-
-app:
-  cookie:
-    secure: true
-    same-site: None
+#app:
+#  cookie:
+#    secure: true
+#    same-site: None

@@ -6,5 +6,6 @@ public enum ScheduleStatus {
     JOINED,
     COMPLETED,
     EXPIRED,
-    CANCELLED
+    CANCELLED,
+    NO_SHOW
 }

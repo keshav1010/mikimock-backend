@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface AuthService {
-    AuthResponse register(@Valid RegisterRequest registerRequest);
+    void register(@Valid RegisterRequest registerRequest);
 
     AuthResponse login(@Valid LoginRequest loginRequest);
 

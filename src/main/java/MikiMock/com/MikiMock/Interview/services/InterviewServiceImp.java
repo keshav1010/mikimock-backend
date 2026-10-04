@@ -10,6 +10,7 @@ import MikiMock.com.MikiMock.Interview.dto.JoinInterviewResponse;
 import MikiMock.com.MikiMock.Interview.dto.ScheduleRequest;
 import MikiMock.com.MikiMock.Interview.entity.*;
 import MikiMock.com.MikiMock.Room.repository.RoomRepository;
+import MikiMock.com.MikiMock.User.entity.SubscriptionType;
 import MikiMock.com.MikiMock.User.entity.User;
 import MikiMock.com.MikiMock.User.repository.UserRepository;
 import MikiMock.com.MikiMock.WebSocket.MatchNotificationService;
@@ -40,6 +41,8 @@ public class InterviewServiceImp implements InterviewService{
     private final MatchNotificationService matchNotificationService;
     private final ProblemAssignmentService problemAssignmentService;
 
+    private static final int JOIN_GRACE_MINUTES = 5;
+
 
     @Override
     @Transactional
@@ -61,6 +64,76 @@ public class InterviewServiceImp implements InterviewService{
             log.info("Interview already scheduled at that time slot");
             throw new BusinessException("Slot is already booked for your Interview");
         }
+
+
+        if (user.getSubscriptionType() == SubscriptionType.FREE) {
+
+            // FOR 1ST USER EXPERIENCE
+            long usedFreeInterviews = interviewRepository.countByUserAndStatusNot(
+                            user,
+                            ScheduleStatus.CANCELLED
+                    );
+
+
+
+            // --------------------------------------------------
+            // 3. Topic + time-slot capacity
+            // --------------------------------------------------
+
+            if(usedFreeInterviews >= 2) {
+                long scheduledCount = interviewRepository.countByTopicAndScheduledTimeAndStatusNot(
+                                        request.getTopic(),
+                                        request.getTime(),
+                                        ScheduleStatus.CANCELLED
+                                );
+
+
+                if (scheduledCount >= 20) {
+                    log.info(
+                            "Free-user slot capacity reached. Topic: {}, Time: {}, Count: {}",
+                            request.getTopic(),
+                            request.getTime(),
+                            scheduledCount
+                    );
+
+                    throw new BusinessException(
+                            "100 free spots are filled. Cannot schedule interview for this slot."
+                    );
+                }
+
+
+                // --------------------------------------------------
+                // 4. FREE user monthly quota
+                //    Maximum 5 completed interviews in last 30 days
+                // --------------------------------------------------
+
+                LocalDateTime thirtyDaysAgo =
+                        LocalDateTime.now().minusDays(30);
+
+                long completedInterviews =
+                        interviewRepository
+                                .countByUserAndScheduledTimeBetweenAndStatus(
+                                        user,
+                                        thirtyDaysAgo,
+                                        LocalDateTime.now(),
+                                        ScheduleStatus.COMPLETED
+                                );
+
+                if (completedInterviews >= 5) {
+
+                    log.info(
+                            "Free interview quota completed for user {}. Interviews in last 30 days: {}",
+                            user.getId(),
+                            completedInterviews
+                    );
+
+                    throw new BusinessException(
+                            "Free interview quota is completed. You have already completed 5 interviews in the last 30 days."
+                    );
+                }
+            }
+        }
+
 
 
         InterviewQuestion interviewQuestion = problemAssignmentService.assignProblemToUser(user, request);
@@ -126,6 +199,54 @@ public class InterviewServiceImp implements InterviewService{
         return cancelScheduledInterview;
     }
 
+    @Transactional
+    public void cancelInterviewForMatchmakingTimeout(Long userId) {
+
+        InterviewSchedule schedule = interviewRepository.findActiveJoinedInterviewForUser(userId , ScheduleStatus.JOINED).orElse(null);
+
+        if (schedule == null) {
+
+            log.debug(
+                    "No JOINED interview found for matchmaking timeout userId={}",
+                    userId
+            );
+
+            return;
+        }
+
+        /*
+         * Race-condition protection.
+         *
+         * If another process already changed the lifecycle,
+         * don't overwrite it.
+         */
+        if (schedule.getStatus()
+                != ScheduleStatus.JOINED) {
+
+            return;
+        }
+
+        schedule.setStatus(
+                ScheduleStatus.CANCELLED
+        );
+
+        interviewRepository.save(schedule);
+
+        log.info(
+                "Interview schedule cancelled because matchmaking timed out userId={} scheduleId={}",
+                userId,
+                schedule.getId()
+        );
+    }
+
+    @Override
+    public boolean hasJoinedInterview(Long userId) {
+        return interviewRepository.existsByUserIdAndStatus(
+                userId,
+                ScheduleStatus.JOINED
+        );
+    }
+
 
     @Override
     @Transactional
@@ -136,6 +257,7 @@ public class InterviewServiceImp implements InterviewService{
         Optional<Room> activeRoom = roomRepository.findActiveRoomByUserId(user.getId());
 
         if (activeRoom.isPresent()) {
+            log.info("Active room present");
             return JoinInterviewResponse.builder()
                     .status("ROOM_EXISTS")
                     .roomCode(
@@ -146,17 +268,32 @@ public class InterviewServiceImp implements InterviewService{
         }
 
 
+        if (LocalDateTime.now().isAfter(schedule.getScheduledTime().plusMinutes(JOIN_GRACE_MINUTES))) {
+            log.warn(
+                    "Interview join window expired. interviewId={}, scheduledTime={}, now={}",
+                    schedule.getId(),
+                    schedule.getScheduledTime(),
+                    LocalDateTime.now()
+            );
+            throw new BusinessException(
+                    "The interview join window has expired. Please make sure you join within the 5 minutes of scheduled time."
+            );
+        }
+
+
         matchQueueService.addUserToQueue(
             schedule.getTopic(),
             schedule.getLevel(),
             user.getId()
         );
 
+        schedule.setStatus(ScheduleStatus.JOINED);
+        interviewRepository.save(schedule);
+
         return JoinInterviewResponse.builder()
                 .status("Matching")
                 .build();
     }
-
 
 
 

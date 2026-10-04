@@ -17,7 +17,11 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_interview_schedule_user", columnList = "user_id"),
                 @Index(name = "idx_interview_schedule_status", columnList = "status"),
-                @Index(name = "idx_interview_schedule_time", columnList = "scheduled_time")
+                @Index(name = "idx_interview_schedule_time", columnList = "scheduled_time"),
+                @Index(
+                        name = "idx_interview_schedule_status_scheduled_time",
+                        columnList = "status, scheduled_time"
+                )
         }
 )
 @Getter
@@ -69,7 +73,7 @@ public class InterviewSchedule {
     private String level;
 
     @NotNull
-    @Future
+//    @Future
     @Column(
             name = "scheduled_time",
             nullable = false
@@ -77,7 +81,7 @@ public class InterviewSchedule {
     private LocalDateTime scheduledTime;
 
     @NotNull
-    @Future
+//    @Future
     @Column(
             name = "end_time",
             nullable = false
